@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity{
                     public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
                         //권한을 얻었을때
                         displaySongs();
+
                     }
 
                     @Override
