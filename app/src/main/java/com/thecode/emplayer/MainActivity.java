@@ -20,6 +20,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
@@ -38,11 +39,13 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.songlist) ListView songListView;
+    @BindView(R.id.songlist)
+    ListView songListView;
 
     String[] items;
+    //TODO MediaPlayer 백그라운드에서 사용구현하기
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +58,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     //권한요청
-    public void runtimePermission(){
+    public void runtimePermission() {
         Dexter.withContext(this).withPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
                 .withListener(new PermissionListener() {
                     @Override
@@ -79,16 +82,16 @@ public class MainActivity extends AppCompatActivity{
     }
 
     //노래찾는 메소드
-    public ArrayList<File> findSong(File file){
+    public ArrayList<File> findSong(File file) {
         ArrayList<File> arrayList = new ArrayList<>();
 
         File[] files = file.listFiles();
 
-        for (File singleFile: files){
-            if (singleFile.isDirectory() && !singleFile.isHidden()){
+        for (File singleFile : files) {
+            if (singleFile.isDirectory() && !singleFile.isHidden()) {
                 arrayList.addAll(findSong(singleFile));
             } else {
-                if (singleFile.getName().endsWith(".mp3") || singleFile.getName().endsWith(".wav")){
+                if (singleFile.getName().endsWith(".mp3") || singleFile.getName().endsWith(".wav")) {
                     arrayList.add(singleFile);
                 }
             }
@@ -96,11 +99,11 @@ public class MainActivity extends AppCompatActivity{
         return arrayList;
     }
 
-    void displaySongs(){
+    void displaySongs() {
         final ArrayList<File> mySongs = findSong(Environment.getExternalStorageDirectory());
 
         items = new String[mySongs.size()];
-        for (int i = 0; i < mySongs.size(); i++){
+        for (int i = 0; i < mySongs.size(); i++) {
             //노래파일 뒤에 있는 mp3와 wav확장명은 보기 안좋으므로 없앤다.
             items[i] = mySongs.get(i).getName().toString().replace(".mp3", "")
                     .replace(".wav", "");
@@ -111,9 +114,21 @@ public class MainActivity extends AppCompatActivity{
 
         CustomAdapter customAdapter = new CustomAdapter();
         songListView.setAdapter(customAdapter);
+
+        //노래를 누르면 PlayerActivity로 움직여서 노래실행
+        songListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String songName = (String) songListView.getItemAtPosition(position);
+                Intent intent = new Intent(getApplicationContext(), PlayerActivity.class)
+                        .putExtra("songs", mySongs).putExtra("songname", songName)
+                        .putExtra("position", position);
+                startActivity(intent);
+            }
+        });
     }
 
-    class CustomAdapter extends BaseAdapter{
+    class CustomAdapter extends BaseAdapter {
 
         @Override
         public int getCount() {

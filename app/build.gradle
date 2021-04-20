@@ -47,4 +47,7 @@ dependencies {
     //Glider
     implementation 'com.github.bumptech.glide:glide:4.12.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
+
+    //AudioVisualizer
+    implementation 'com.gauravk.audiovisualizer:audiovisualizer:0.9.2'
 }
