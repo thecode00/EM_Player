@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     ListView songListView;
 
     String[] items;
+    ArrayList<Song> songList = new ArrayList<Song>();
     //TODO MediaPlayer 백그라운드에서 사용구현하기
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
                         //권한을 얻었을때
                         displaySongs();
-
+                        findSongList();
                     }
 
                     @Override
@@ -156,5 +157,46 @@ public class MainActivity extends AppCompatActivity {
             return myView;
 
         }
+    }
+
+    private void findSongList(){
+        ContentResolver contentResolver = getContentResolver();
+        //아스키코드순으로 정렬
+        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+        String[] projection = {
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.ALBUM_ID,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.DURATION,
+                MediaStore.Audio.Media.DATA
+        };
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+        Cursor cursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, null, sortOrder);
+        cursor.moveToFirst();
+        Log.d("노래갯수", Integer.toString(cursor.getCount()));
+
+
+
+        //각 노래의 정보를 Song객체에 담아 리스트에 저장한다.
+        //while이 먼저 안오고 do가 먼저오는 이유는 cursor의 갯수가 1개일때 cursor.moveToNext가 false가 되기때문
+        //TODO albumart 부분 해결하기
+        if (cursor != null && cursor.getCount() > 0){
+            do {
+                long song_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
+                long album_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
+                String song_title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+                String song_album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
+                String song_artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+                long mDuration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+                String dataPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+                Log.e("123",song_title);
+                Log.e("song", song_id + " * " + album_id + " * " + song_title + " * " + song_album + " * " + song_artist + " * " + mDuration + " * " + dataPath);
+                songList.add(new Song(song_id, album_id, song_title, song_album, song_artist, mDuration, dataPath));
+
+            } while (cursor.moveToNext());
+        }
+
     }
 }
