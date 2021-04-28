@@ -1,6 +1,8 @@
 package com.thecode.emplayer;
 
-public class Song {
+import java.io.Serializable;
+
+public class Song implements Serializable {
     private long mId;
     private long mAlbumId;
     private String mTitle;

@@ -18,11 +18,13 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -41,8 +43,7 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.songlist)
-    ListView songListView;
+    RecyclerView songListView;
 
     String[] items;
     ArrayList<Song> songList = new ArrayList<Song>();
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ButterKnife.bind(this);
+        songListView = (RecyclerView) findViewById(R.id.songlist);
 
         runtimePermission();
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
                         //권한을 얻었을때
                         displaySongs();
-                        findSongList();
+
                     }
 
                     @Override
@@ -101,61 +102,62 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void displaySongs() {
-        final ArrayList<File> mySongs = findSong(Environment.getExternalStorageDirectory());
-
-        items = new String[mySongs.size()];
-        for (int i = 0; i < mySongs.size(); i++) {
-            //노래파일 뒤에 있는 mp3와 wav확장명은 보기 안좋으므로 없앤다.
-            items[i] = mySongs.get(i).getName().toString().replace(".mp3", "")
-                    .replace(".wav", "");
-        }
+        findSongList();
 
         //ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
         //songListView.setAdapter(myAdapter);
+        songListView = (RecyclerView) findViewById(R.id.songlist);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        songListView.setLayoutManager(layoutManager);
 
         CustomAdapter customAdapter = new CustomAdapter();
         songListView.setAdapter(customAdapter);
 
-        //노래를 누르면 PlayerActivity로 움직여서 노래실행
-        songListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String songName = (String) songListView.getItemAtPosition(position);
-                Intent intent = new Intent(getApplicationContext(), PlayerActivity.class)
-                        .putExtra("songs", mySongs).putExtra("songname", songName)
-                        .putExtra("position", position);
-                startActivity(intent);
-            }
-        });
     }
 
-    class CustomAdapter extends BaseAdapter {
+    class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.Holder> {
 
+
+        @NonNull
         @Override
-        public int getCount() {
-            return items.length;
+        public CustomAdapter.Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            Context context = parent.getContext();
+            View view = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
+            Holder holder = new Holder(view);
+            return holder;
         }
 
         @Override
-        public Object getItem(int position) {
-            return null;
+        public void onBindViewHolder(@NonNull CustomAdapter.Holder holder, int position) {
+            holder.tv_songname.setText(songList.get(position).getmTitle().replace(".mp3", "")
+                .replace(".wav", ""));
+
+            holder.itemView.setTag(position);
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.e("click", Integer.toString(position));
+                    Intent intent = new Intent(getApplicationContext(), PlayerActivity.class)
+                            .putExtra("songs", songList).putExtra("position", position);
+                    startActivity(intent);
+                }
+            });
         }
 
         @Override
-        public long getItemId(int position) {
-            return 0;
+        public int getItemCount() {
+            Log.e("size", Integer.toString(songList.size()));
+            return songList.size();
         }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View myView = getLayoutInflater().inflate(R.layout.list_item, null, false);
-            //TODO setSelected뭔기 찾아보기
-            TextView tvSongName = (TextView) myView.findViewById(R.id.songname);
-            tvSongName.setSelected(true);
-            tvSongName.setText(items[position]);
-
-            return myView;
-
+        public class Holder extends RecyclerView.ViewHolder{
+            protected ImageView iv_album;
+            protected TextView tv_songname;
+            public Holder(@NonNull View itemView) {
+                super(itemView);
+                this.iv_album = (ImageView) itemView.findViewById(R.id.imgsong);
+                this.tv_songname = (TextView) itemView.findViewById(R.id.songname);
+            }
         }
     }
 
@@ -191,8 +193,8 @@ public class MainActivity extends AppCompatActivity {
                 String song_artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
                 long mDuration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
                 String dataPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
-                Log.e("123",song_title);
-                Log.e("song", song_id + " * " + album_id + " * " + song_title + " * " + song_album + " * " + song_artist + " * " + mDuration + " * " + dataPath);
+//                Log.e("123",song_title);
+//                Log.e("song", song_id + " * " + album_id + " * " + song_title + " * " + song_album + " * " + song_artist + " * " + mDuration + " * " + dataPath);
                 songList.add(new Song(song_id, album_id, song_title, song_album, song_artist, mDuration, dataPath));
 
             } while (cursor.moveToNext());

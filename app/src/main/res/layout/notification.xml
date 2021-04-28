@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:background="#777777"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/nt_image"
+        android:layout_width="64dp"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_ntappname"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="#ffffff"
+            tools:text="EM Player"
+            android:layout_marginLeft="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_ntsongname"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:background="#ffff3f"
+            android:singleLine="true"
+            android:layout_marginLeft="8dp"
+            tools:text="songnamedsddddddddddddddddddddddddddddd" />
+
+        <TextView
+            android:id="@+id/tv_ntartistname"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="#aaff23"
+            android:singleLine="true"
+            android:layout_marginLeft="8dp"
+            tools:text="artisttttttttttttttttttttttttttttttttttttttttttt" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/nt_previous"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_baseline_skip_previous_24"
+        android:background="#777777"/>
+
+    <ImageButton
+        android:id="@+id/nt_startpause"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_pause"
+        android:background="#777777"/>
+
+    <ImageButton
+        android:id="@+id/nt_next"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_next"
+        android:background="#777777"/>
+    <ImageButton
+        android:id="@+id/nt_close"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_play"
+        android:background="#777777"/>
+</LinearLayout>
