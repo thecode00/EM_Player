@@ -4,9 +4,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.ObjectAnimator;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
@@ -39,7 +41,101 @@ public class PlayerActivity extends AppCompatActivity {
     Thread updateSeekbar;
     MusicService musicService;
     boolean isService = false;
+    ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MyBinder mb = (MusicService.MyBinder) service;
+            musicService = mb.getService();
+            isService = true;
+            Toast.makeText(PlayerActivity.this, "11", Toast.LENGTH_SHORT).show();
+            Log.e("Service coneect", "connecta");
+            //SeekBar구현
+//            updateSeekbar = new Thread() {
+//                @Override
+//                public void run() {
+//                    int duration = (int)mySongs.get(position).getmDuration();
+//                    int currentPosition = 0;
+//                    while (currentPosition < duration) {
+//                        try {
+//                            sleep(500);
+//                            currentPosition = musicService.mediaPlayer.getCurrentPosition();
+//                            seekBar.setProgress(currentPosition);
+//                        } catch (InterruptedException | IllegalStateException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }
+//            };
+//            seekBar.setMax((int)mySongs.get(position).getmDuration());
+//            updateSeekbar.start();
+//            seekBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.black), PorterDuff.Mode.MULTIPLY);
+//            seekBar.getThumb().setColorFilter(getResources().getColor(R.color.teal_700), PorterDuff.Mode.SRC_IN);
+//
+//            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//                @Override
+//                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//
+//                }
+//
+//                @Override
+//                public void onStartTrackingTouch(SeekBar seekBar) {
+//                }
+//
+//                @Override
+//                public void onStopTrackingTouch(SeekBar seekBar) {
+//                    //TODO
+//                    musicService.mediaPlayer.seekTo(seekBar.getProgress());
+//                    String currentTime = createTime(musicService.mediaPlayer.getCurrentPosition());
+//                    tv_starttime.setText(currentTime);
+//                }
+//            });
+//            String endTime = createTime(mySongs.get(position).getmDuration());
+//            tv_endtime.setText(endTime);
+//
+//            final Handler handler = new Handler();
+//            final int delay = 1000;
+//
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    String currentTime = createTime(musicService.mediaPlayer.getCurrentPosition());
+//                    tv_starttime.setText(currentTime);
+//                    handler.postDelayed(this, delay);
+//                }
+//            }, delay);
+        }
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isService = false;
+        }
+    };
+    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //노래가 끝났을때 받는 리시버
+            btn_playpause.setBackgroundResource(R.drawable.ic_play);
+            String act = intent.getAction();
+            if (act == "songend"){
+                Log.e("arriveBroad", "comple");
+                Toast.makeText(getApplicationContext(), act, Toast.LENGTH_SHORT).show();
+//                try {
+//                    unbindService(serviceConnection);
+//                } catch (Exception e){
+//                    Log.e("error", "bind error");
+//                }
+            } else if (act == "prepared") {
+                Log.e("arriveBraod", "prepare");
+//                try {
+//                    unbindService(serviceConnection);
+//                } catch (Exception e){
+//                    Log.e("error", "bind error");
+//                }
+                Intent musicIntent = new Intent(getApplicationContext(), MusicService.class);
+                bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+            }
+        }
+    };
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -49,11 +145,26 @@ public class PlayerActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void registerBroadcast() {
+        IntentFilter intentFilter = new IntentFilter();
+        //노래가 끝났을때
+        intentFilter.addAction("songend");
+        //노래가 준비되었을때
+        intentFilter.addAction("prepared");
+        registerReceiver(mBroadcastReceiver, intentFilter);
+    }
+
+    private void unregisterBroadcast() {
+        unregisterReceiver(mBroadcastReceiver);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
+        //노래가끝나면 브로드캨스트를 받음
+        registerBroadcast();
 
         btn_previous = (Button) findViewById(R.id.previous_button);
         btn_playpause = (Button) findViewById(R.id.play_pause_button);
@@ -71,95 +182,15 @@ public class PlayerActivity extends AppCompatActivity {
 
         mySongs = (ArrayList) bundle.getParcelableArrayList("songs");
         position = bundle.getInt("position", 0);
+        Log.e("position", Integer.toString(position));
         tv_songname.setSelected(true);
 
         //musicservice시작
+        startIntent();
+        //view정보 바인딩
+        settingView();
+
         Intent musicIntent = new Intent(getApplicationContext(), MusicService.class);
-        musicIntent.putExtra("songs", mySongs).putExtra("position", position);
-        startService(musicIntent);
-
-        sname = mySongs.get(position).getmTitle();
-        tv_songname.setText(sname);
-        tv_artistname.setText(mySongs.get(position).getmArtist());
-        ServiceConnection serviceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                MusicService.MyBinder mb = (MusicService.MyBinder) service;
-                musicService = mb.getService();
-                isService = true;
-                Toast.makeText(PlayerActivity.this, "11", Toast.LENGTH_SHORT).show();
-                Log.e("12312313", "1412414141");
-                //SeekBar구현
-                updateSeekbar = new Thread() {
-                    @Override
-                    public void run() {
-                        int duration = musicService.mediaPlayer.getDuration();
-                        int currentPosition = 0;
-                        while (currentPosition < duration) {
-                            try {
-                                sleep(500);
-                                currentPosition = musicService.mediaPlayer.getCurrentPosition();
-                                seekBar.setProgress(currentPosition);
-                            } catch (InterruptedException | IllegalStateException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                };
-                tv_artistname.setText(mySongs.get(position).getmArtist());
-                seekBar.setMax(musicService.mediaPlayer.getDuration());
-                updateSeekbar.start();
-                seekBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.black), PorterDuff.Mode.MULTIPLY);
-                seekBar.getThumb().setColorFilter(getResources().getColor(R.color.teal_700), PorterDuff.Mode.SRC_IN);
-
-                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                        //TODO
-                        musicService.mediaPlayer.seekTo(seekBar.getProgress());
-                        String currentTime = createTime(musicService.mediaPlayer.getCurrentPosition());
-                        tv_starttime.setText(currentTime);
-                    }
-                });
-                String endTime = createTime(musicService.mediaPlayer.getDuration());
-                tv_endtime.setText(endTime);
-
-                final Handler handler = new Handler();
-                final int delay = 1000;
-
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        String currentTime = createTime(musicService.mediaPlayer.getCurrentPosition());
-                        tv_starttime.setText(currentTime);
-                        handler.postDelayed(this, delay);
-                    }
-                }, delay);
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                isService = false;
-            }
-        };
-        bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-
-        //노래시작
-//        mediaPlayer = MediaPlayer.create(getApplicationContext(), uri);
-//        if (mediaPlayer.isPlaying()){
-//            Log.e("1","1");
-//        }
-//        mediaPlayer.start();
-
 
         //일시정지 버튼 구현
         btn_playpause.setOnClickListener(new View.OnClickListener() {
@@ -180,21 +211,11 @@ public class PlayerActivity extends AppCompatActivity {
         btn_next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                unbindService(serviceConnection);
                 position = ((position + 1) % mySongs.size());
-                Log.e("positon", Integer.toString(position));
-                Intent nextIntent = new Intent(getApplicationContext(), MusicService.class);
-                nextIntent.putExtra("songs", mySongs).putExtra("position", position);
-                startService(nextIntent);
-                sname = mySongs.get(position).getmTitle();
-                tv_songname.setText(sname);
+                startIntent();
+                settingView();
                 btn_playpause.setBackgroundResource(R.drawable.ic_pause);
-                tv_starttime.setText("0:00");
                 bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-                String endTime = createTime(musicService.mediaPlayer.getDuration());
-                Log.e("endtime", Integer.toString(musicService.mediaPlayer.getDuration()));
-                tv_endtime.setText(endTime);
-
             }
         });
 
@@ -207,30 +228,20 @@ public class PlayerActivity extends AppCompatActivity {
                 } else {
                     position -= 1;
                 }
-                unbindService(serviceConnection);
-                Log.e("positon", Integer.toString(position));
-                Intent nextIntent = new Intent(getApplicationContext(), MusicService.class);
-                nextIntent.putExtra("songs", mySongs).putExtra("position", position);
-                startService(nextIntent);
-                sname = mySongs.get(position).getmTitle();
-                tv_songname.setText(sname);
+                startIntent();
+                settingView();
                 btn_playpause.setBackgroundResource(R.drawable.ic_pause);
-                tv_starttime.setText("0:00");
                 bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-                String endTime = createTime(musicService.mediaPlayer.getDuration());
-                Log.e("endtime", Integer.toString(musicService.mediaPlayer.getDuration()));
-                tv_endtime.setText(endTime);
-
             }
         });
 
         //노래가 끝나면 다음노래로 이동
     }
 
-    public String createTime(int duration) {
+    public String createTime(long duration) {
         String time = "";
-        int min = duration / 1000 / 60;
-        int sec = duration / 1000 % 60;
+        long min = duration / 1000 / 60;
+        long sec = duration / 1000 % 60;
 
         time += min + ":";
 
@@ -239,5 +250,19 @@ public class PlayerActivity extends AppCompatActivity {
         }
         time += sec;
         return time;
+    }
+
+    private void startIntent() {
+        Intent intent = new Intent(getApplicationContext(), MusicService.class);
+        intent.putExtra("songs", mySongs).putExtra("position", position);
+        startService(intent);
+    }
+
+    private void settingView() {
+        tv_songname.setText(mySongs.get(position).getmTitle());
+        tv_artistname.setText(mySongs.get(position).getmArtist());
+        tv_starttime.setText("0:00");
+        String endTime = createTime(mySongs.get(position).getmDuration());
+        tv_endtime.setText(endTime);
     }
 }

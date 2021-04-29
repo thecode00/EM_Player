@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
                 String song_title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
                 String song_album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
                 String song_artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                long mDuration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+                Long mDuration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
                 String dataPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
 //                Log.e("123",song_title);
 //                Log.e("song", song_id + " * " + album_id + " * " + song_title + " * " + song_album + " * " + song_artist + " * " + mDuration + " * " + dataPath);
