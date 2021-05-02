@@ -2,6 +2,7 @@ package com.thecode.emplayer;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -17,6 +18,7 @@ public class MusicService extends Service{
     IBinder iBinder = new MyBinder();
     MediaPlayer mediaPlayer;
     ArrayList<Song> songList;
+    boolean isLoop = false;
     private Song mSong;
     private boolean isPrepared = false;
     int position;
@@ -39,15 +41,6 @@ public class MusicService extends Service{
         return iBinder;
     }
 
-//    //Seekbar를 위한 메소드
-//    public int getPosition(){
-//        return mediaPlayer.getCurrentPosition();
-//    }
-//
-//    public int getTime(){
-//        return mediaPlayer.getDuration();
-//    }
-
     @Override
     public void onCreate() {
         //서비스가 실행될때 단 한번만 호출됨
@@ -66,9 +59,16 @@ public class MusicService extends Service{
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                mediaPlayer.stop();
+                mediaPlayer.reset();
                 isPrepared = false;
                 Log.e("oncomple","comple");
+                SharedPreferences sharedPreferences = getSharedPreferences("loop", MODE_PRIVATE);
+                isLoop = sharedPreferences.getBoolean("isLoop", false);
+                //TODO 반복재생일때구현
+                if (isLoop){
+                    position = ((position + 1) % songList.size());
+                }
+                prepare();
                 sendBroadcast(new Intent("songend"));
             }
         });
@@ -93,6 +93,7 @@ public class MusicService extends Service{
         Log.e("onStartCommand", "Start");
         if (mediaPlayer != null) {
             Log.e("Reset", "Start");
+            isPrepared = false;
             mediaPlayer.reset();
         }
         songList = (ArrayList<Song>) intent.getSerializableExtra("songs");
@@ -102,17 +103,6 @@ public class MusicService extends Service{
         mAlbumId = songList.get(position).getmAlbumId();
 
         prepare();
-
-        //노래가 끝나면 다음노래재생
-//        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-//            @Override
-//            public void onCompletion(MediaPlayer mp) {
-//                position = ((position + 1) % songList.size());
-//                Uri uri = Uri.parse(songList.get(position).getmDataPath());
-//                mediaPlayer = MediaPlayer.create(getApplicationContext(), uri);
-//                mediaPlayer.start();
-//            }
-//        });
         return super.onStartCommand(intent, flags, startId);
     }
     public boolean isPlaying(){
@@ -132,21 +122,42 @@ public class MusicService extends Service{
         }
     }
 
-    public void play(int position){
+    public void play(int position, int curSeek){
         mSong = songList.get(position);
-        stop();
-        prepare();
-        mediaPlayer.start();
-
-
-
-
-
+        if (mediaPlayer != null){
+            try {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                } else {
+                    Log.e("play", "pp");
+                    mediaPlayer.seekTo(curSeek);
+                    mediaPlayer.start();
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
 
     }
 
-    public void stop(){
-        mediaPlayer.stop();
-        mediaPlayer.reset();
+    public int getPosition(){
+        if (isPrepared){
+            return mediaPlayer.getCurrentPosition();
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.e("onunbind", "unbind");
+        return super.onUnbind(intent);
+    }
+
+    public void setLoop(){
+        if (isLoop){
+            isLoop = false;
+        } else {
+            isLoop = true;
+        }
     }
 }
