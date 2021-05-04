@@ -8,12 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.service.controls.actions.CommandAction;
 import android.widget.RemoteViews;
 
 import androidx.core.app.NotificationCompat;
-
-import com.squareup.picasso.Picasso;
 
 //TODO notification 아이콘설정하기
 public class NotificationPlayer {
@@ -108,7 +105,7 @@ public class NotificationPlayer {
             remoteViews.setTextViewText(R.id.tv_ntartistname, artist);
             remoteViews.setTextViewText(R.id.tv_ntsongname, title);
             Uri albumart = ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"), mService.mAlbumId);
-            Picasso.get().load(albumart).into(remoteViews, R.id.nt_image, Notification_ID, notification);
+//            Picasso.get().load(albumart).into(remoteViews, R.id.nt_image, Notification_ID, notification);
         }
     }
 }

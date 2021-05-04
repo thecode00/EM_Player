@@ -2,32 +2,26 @@ package com.thecode.emplayer;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
@@ -35,18 +29,15 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 
-import java.io.File;
 import java.util.ArrayList;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
     RecyclerView songListView;
 
-    String[] items;
     ArrayList<Song> songList = new ArrayList<Song>();
+
     //TODO MediaPlayer 백그라운드에서 사용구현하기
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,27 +74,8 @@ public class MainActivity extends AppCompatActivity {
                 }).check();
     }
 
-    //노래찾는 메소드
-    public ArrayList<File> findSong(File file) {
-        ArrayList<File> arrayList = new ArrayList<>();
-
-        File[] files = file.listFiles();
-
-        for (File singleFile : files) {
-            if (singleFile.isDirectory() && !singleFile.isHidden()) {
-                arrayList.addAll(findSong(singleFile));
-            } else {
-                if (singleFile.getName().endsWith(".mp3") || singleFile.getName().endsWith(".wav")) {
-                    arrayList.add(singleFile);
-                }
-            }
-        }
-        return arrayList;
-    }
-
     void displaySongs() {
         findSongList();
-
         //ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
         //songListView.setAdapter(myAdapter);
         songListView = (RecyclerView) findViewById(R.id.songlist);
@@ -130,7 +102,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull CustomAdapter.Holder holder, int position) {
             holder.tv_songname.setText(songList.get(position).getmTitle().replace(".mp3", "")
-                .replace(".wav", ""));
+                    .replace(".wav", ""));
+            //Album Cover
+            Uri u = Uri.parse("content://media/external/audio/albumart");
+            Uri uri = ContentUris.withAppendedId(u, songList.get(position).getmAlbumId());
+            Glide.with(holder.itemView.getContext())
+                    .asBitmap()
+                    .override(40, 40)
+                    .error(R.drawable.ic_baseline_music_note_24)
+                    .load(uri)
+                    .into(holder.iv_album);
 
             holder.itemView.setTag(position);
             holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -150,9 +131,10 @@ public class MainActivity extends AppCompatActivity {
             return songList.size();
         }
 
-        public class Holder extends RecyclerView.ViewHolder{
+        public class Holder extends RecyclerView.ViewHolder {
             protected ImageView iv_album;
             protected TextView tv_songname;
+
             public Holder(@NonNull View itemView) {
                 super(itemView);
                 this.iv_album = (ImageView) itemView.findViewById(R.id.imgsong);
@@ -161,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void findSongList(){
+    private void findSongList() {
         ContentResolver contentResolver = getContentResolver();
         //아스키코드순으로 정렬
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
@@ -180,11 +162,10 @@ public class MainActivity extends AppCompatActivity {
         Log.d("노래갯수", Integer.toString(cursor.getCount()));
 
 
-
         //각 노래의 정보를 Song객체에 담아 리스트에 저장한다.
         //while이 먼저 안오고 do가 먼저오는 이유는 cursor의 갯수가 1개일때 cursor.moveToNext가 false가 되기때문
         //TODO albumart 부분 해결하기
-        if (cursor != null && cursor.getCount() > 0){
+        if (cursor != null && cursor.getCount() > 0) {
             do {
                 long song_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
                 long album_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));

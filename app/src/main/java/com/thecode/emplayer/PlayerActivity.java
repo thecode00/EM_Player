@@ -3,16 +3,15 @@ package com.thecode.emplayer;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.animation.ObjectAnimator;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,23 +20,22 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.File;
+import com.bumptech.glide.Glide;
+
 import java.util.ArrayList;
 
 public class PlayerActivity extends AppCompatActivity {
+    ImageView iv_album;
     Button btn_previous, btn_playpause, btn_next, btn_repeat;
     SeekBar seekBar;
     TextView tv_songname, tv_starttime, tv_endtime, tv_artistname;
 
     private int position;
     private ArrayList<Song> mySongs;
-    private String sname;
-//    MediaPlayer mediaPlayer;
-    //TODO 바인드서비스 제대로 알아보기
     //SeekBar구현 변수
     Thread updateSeekbar;
     MusicService musicService;
@@ -67,7 +65,6 @@ public class PlayerActivity extends AppCompatActivity {
                     }
                 }
             };
-            seekBar.setMax((int)mySongs.get(position).getmDuration());
             updateSeekbar.start();
             seekBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.black), PorterDuff.Mode.MULTIPLY);
             seekBar.getThumb().setColorFilter(getResources().getColor(R.color.teal_700), PorterDuff.Mode.SRC_IN);
@@ -171,6 +168,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         //노래가끝나면 브로드캨스트를 받음
         registerBroadcast();
+        iv_album = (ImageView) findViewById(R.id.iv_playeralbum);
 
         btn_previous = (Button) findViewById(R.id.previous_button);
         btn_playpause = (Button) findViewById(R.id.play_pause_button);
@@ -281,11 +279,19 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void settingView() {
         Log.e("SettingView","set");
+        Uri u = Uri.parse("content://media/external/audio/albumart");
+        Uri uri = ContentUris.withAppendedId(u, mySongs.get(position).getmAlbumId());
+        Glide.with(this)
+                .asBitmap()
+                .error(R.drawable.ic_baseline_music_note_24)
+                .load(uri)
+                .into(iv_album);
         tv_songname.setText(mySongs.get(position).getmTitle());
         tv_artistname.setText(mySongs.get(position).getmArtist());
         tv_starttime.setText("0:00");
         String endTime = createTime(mySongs.get(position).getmDuration());
         tv_endtime.setText(endTime);
+        seekBar.setMax((int)mySongs.get(position).getmDuration());
     }
 
     @Override

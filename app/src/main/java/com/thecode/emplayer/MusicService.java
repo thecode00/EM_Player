@@ -76,16 +76,11 @@ public class MusicService extends Service{
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
                 isPrepared = false;
+                prepare();
                 Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
                 return false;
             }
         });
-//        mediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
-//            @Override
-//            public void onSeekComplete(MediaPlayer mp) {
-//
-//            }
-//        });
     }
 
     @Override
