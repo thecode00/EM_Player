@@ -19,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -33,21 +34,46 @@ import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
-
+    TextView tv_license;
+    ImageView iv_des;
     RecyclerView songListView;
 
     ArrayList<Song> songList = new ArrayList<Song>();
-
-    //TODO MediaPlayer 백그라운드에서 사용구현하기
+    //TODO 오디오포커스 구현
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        tv_license = (TextView) findViewById(R.id.nav_ex);
+        iv_des = (ImageView) findViewById(R.id.iv_license);
         songListView = (RecyclerView) findViewById(R.id.songlist);
 
         runtimePermission();
 
+        tv_license.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, LicenseActivity.class);
+                startActivity(intent);
+            }
+        });
+        iv_des.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, LicenseActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        LinearLayout linearLayout = (LinearLayout)findViewById(R.id.linearll);
+        linearLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, LicenseActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     //권한요청
@@ -103,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull CustomAdapter.Holder holder, int position) {
             holder.tv_songname.setText(songList.get(position).getmTitle().replace(".mp3", "")
                     .replace(".wav", ""));
+            holder.tv_artist.setText(songList.get(position).getmArtist());
             //Album Cover
             Uri u = Uri.parse("content://media/external/audio/albumart");
             Uri uri = ContentUris.withAppendedId(u, songList.get(position).getmAlbumId());
@@ -133,12 +160,13 @@ public class MainActivity extends AppCompatActivity {
 
         public class Holder extends RecyclerView.ViewHolder {
             protected ImageView iv_album;
-            protected TextView tv_songname;
+            protected TextView tv_songname, tv_artist;
 
             public Holder(@NonNull View itemView) {
                 super(itemView);
                 this.iv_album = (ImageView) itemView.findViewById(R.id.imgsong);
                 this.tv_songname = (TextView) itemView.findViewById(R.id.songname);
+                this.tv_artist = (TextView) itemView.findViewById(R.id.tv_artist);
             }
         }
     }
@@ -164,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
 
         //각 노래의 정보를 Song객체에 담아 리스트에 저장한다.
         //while이 먼저 안오고 do가 먼저오는 이유는 cursor의 갯수가 1개일때 cursor.moveToNext가 false가 되기때문
-        //TODO albumart 부분 해결하기
         if (cursor != null && cursor.getCount() > 0) {
             do {
                 long song_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));

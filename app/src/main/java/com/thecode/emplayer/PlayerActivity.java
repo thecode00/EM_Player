@@ -52,7 +52,7 @@ public class PlayerActivity extends AppCompatActivity {
             updateSeekbar = new Thread() {
                 @Override
                 public void run() {
-                    int duration = (int)mySongs.get(position).getmDuration();
+                    int duration = (int) mySongs.get(position).getmDuration();
                     int currentPosition = 0;
                     while (currentPosition < duration) {
                         try {
@@ -81,8 +81,7 @@ public class PlayerActivity extends AppCompatActivity {
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-                    //TODO
-                    if (isService){
+                    if (isService) {
                         musicService.mediaPlayer.seekTo(seekBar.getProgress());
                         String currentTime = createTime(musicService.getPosition());
                         tv_starttime.setText(currentTime);
@@ -99,7 +98,7 @@ public class PlayerActivity extends AppCompatActivity {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (isService){
+                    if (isService) {
                         String currentTime = createTime(musicService.getPosition());
                         tv_starttime.setText(currentTime);
                     }
@@ -119,11 +118,11 @@ public class PlayerActivity extends AppCompatActivity {
             //노래가 끝났을때 받는 리시버
 //            btn_playpause.setBackgroundResource(R.drawable.ic_play);
             String act = intent.getAction();
-            if (act == "songend"){
+            if (act == "songend") {
                 Log.e("arriveBroad", "comple");
                 seekBar.setProgress(0);
                 tv_starttime.setText("0:00");
-                if (musicService.isLoop){
+                if (musicService.isLoop) {
                     position = ((position + 1) % mySongs.size());
                 }
                 settingView();
@@ -131,7 +130,7 @@ public class PlayerActivity extends AppCompatActivity {
                 Log.e("arriveBraod", "prepare");
                 Intent musicIntent = new Intent(getApplicationContext(), MusicService.class);
                 bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-                if (isLoop){
+                if (isLoop) {
                     btn_repeat.setBackgroundResource(R.drawable.ic_repeat);
                 } else {
                     btn_repeat.setBackgroundResource(R.drawable.ic_norepeat);
@@ -198,7 +197,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = getSharedPreferences("loop", MODE_PRIVATE);
         isLoop = sharedPreferences.getBoolean("isLoop", false);
-        Log.e("isLoop",Boolean.toString(isLoop));
+        Log.e("isLoop", Boolean.toString(isLoop));
 
         Intent musicIntent = new Intent(getApplicationContext(), MusicService.class);
 
@@ -207,9 +206,9 @@ public class PlayerActivity extends AppCompatActivity {
         btn_playpause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("btn_play","play");
-                Log.e("isservice",Boolean.toString(isService));
-                if (isService){
+                Log.e("btn_play", "play");
+                Log.e("isservice", Boolean.toString(isService));
+                if (isService) {
                     Log.e("seekbatpro", Integer.toString(seekBar.getProgress()));
                     musicService.play(position, seekBar.getProgress());
                     btnChange();
@@ -251,7 +250,7 @@ public class PlayerActivity extends AppCompatActivity {
         btn_repeat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("btnchange",Boolean.toString(isLoop));
+                Log.e("btnchange", Boolean.toString(isLoop));
                 setBtn_repeat();
             }
         });
@@ -278,7 +277,7 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     private void settingView() {
-        Log.e("SettingView","set");
+        Log.e("SettingView", "set");
         Uri u = Uri.parse("content://media/external/audio/albumart");
         Uri uri = ContentUris.withAppendedId(u, mySongs.get(position).getmAlbumId());
         Glide.with(this)
@@ -291,7 +290,7 @@ public class PlayerActivity extends AppCompatActivity {
         tv_starttime.setText("0:00");
         String endTime = createTime(mySongs.get(position).getmDuration());
         tv_endtime.setText(endTime);
-        seekBar.setMax((int)mySongs.get(position).getmDuration());
+        seekBar.setMax((int) mySongs.get(position).getmDuration());
     }
 
     @Override
@@ -301,30 +300,30 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     //버튼리소스변경
-    private void btnChange(){
-        if (musicService.isPlaying()){
+    private void btnChange() {
+        if (musicService.isPlaying()) {
             btn_playpause.setBackgroundResource(R.drawable.ic_pause);
         } else {
             btn_playpause.setBackgroundResource(R.drawable.ic_play);
         }
     }
 
-    private void setBtn_repeat(){
+    private void setBtn_repeat() {
         Log.e("setBtn_repeat", Boolean.toString(isLoop));
-        if (isLoop){
+        if (isLoop) {
             btn_repeat.setBackgroundResource(R.drawable.ic_norepeat);
             isLoop = false;
         } else {
             btn_repeat.setBackgroundResource(R.drawable.ic_repeat);
             isLoop = true;
         }
-        Log.e("setBtn_repeat_end", Boolean.toString(isLoop) );
+        Log.e("setBtn_repeat_end", Boolean.toString(isLoop));
         editShare();
     }
 
-    private void editShare(){
-        Log.e("Editshare","edit");
-        SharedPreferences sharedPreferences = getSharedPreferences("loop",MODE_PRIVATE);
+    private void editShare() {
+        Log.e("Editshare", "edit");
+        SharedPreferences sharedPreferences = getSharedPreferences("loop", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("isLoop", isLoop);
         editor.commit();

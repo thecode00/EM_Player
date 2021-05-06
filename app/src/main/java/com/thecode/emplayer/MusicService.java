@@ -37,7 +37,6 @@ public class MusicService extends Service{
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: 바인드서비스 구현하기
         return iBinder;
     }
 
@@ -64,7 +63,6 @@ public class MusicService extends Service{
                 Log.e("oncomple","comple");
                 SharedPreferences sharedPreferences = getSharedPreferences("loop", MODE_PRIVATE);
                 isLoop = sharedPreferences.getBoolean("isLoop", false);
-                //TODO 반복재생일때구현
                 if (isLoop){
                     position = ((position + 1) % songList.size());
                 }
