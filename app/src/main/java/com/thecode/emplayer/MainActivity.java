@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView songListView;
 
     ArrayList<Song> songList = new ArrayList<Song>();
-    //TODO 오디오포커스 구현
+    //TODO API별 오디오포커스 구현, 광고 넣기, 아이콘설정, 메모리최적화, 누룬화면 만들기
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -186,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         Cursor cursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, null, sortOrder);
+        Log.d("노래갯수", Integer.toString(cursor.getCount()));
         cursor.moveToFirst();
         Log.d("노래갯수", Integer.toString(cursor.getCount()));
 

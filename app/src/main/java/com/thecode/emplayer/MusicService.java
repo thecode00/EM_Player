@@ -1,6 +1,7 @@
 package com.thecode.emplayer;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -25,6 +26,8 @@ public class MusicService extends Service{
     String mSongname;
     String mArtistname;
     long mAlbumId;
+    AudioManager am;
+    AudioManager.OnAudioFocusChangeListener audioFocusChangeListener;
 
     class MyBinder extends Binder {
         MusicService getService() {
@@ -44,6 +47,38 @@ public class MusicService extends Service{
     public void onCreate() {
         //서비스가 실행될때 단 한번만 호출됨
         Log.e("oncreate", "start");
+        //오디오포커스
+        am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int focusChange) {
+                switch (focusChange){
+//                    case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK):
+//                        // Lower the volume while ducking.
+//                        mediaPlayer.setVolume(0.2f, 0.2f);
+//                        break;
+                    case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT):
+                        mediaPlayer.pause();
+                        break;
+
+                    case (AudioManager.AUDIOFOCUS_LOSS):
+                        mediaPlayer.stop();
+                        break;
+
+                    case (AudioManager.AUDIOFOCUS_GAIN):
+                        // Return the volume to normal and resume if paused.
+                        mediaPlayer.setVolume(1f, 1f);
+                        mediaPlayer.start();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+        int result = am.requestAudioFocus(audioFocusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN);
+
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
@@ -146,11 +181,9 @@ public class MusicService extends Service{
         return super.onUnbind(intent);
     }
 
-    public void setLoop(){
-        if (isLoop){
-            isLoop = false;
-        } else {
-            isLoop = true;
-        }
+    @Override
+    public void onDestroy() {
+        am.abandonAudioFocus(audioFocusChangeListener);
+        super.onDestroy();
     }
 }

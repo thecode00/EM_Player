@@ -291,6 +291,7 @@ public class PlayerActivity extends AppCompatActivity {
         String endTime = createTime(mySongs.get(position).getmDuration());
         tv_endtime.setText(endTime);
         seekBar.setMax((int) mySongs.get(position).getmDuration());
+        seekBar.setProgress(0);
     }
 
     @Override
