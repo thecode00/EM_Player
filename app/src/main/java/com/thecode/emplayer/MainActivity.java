@@ -23,6 +23,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
@@ -39,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView songListView;
 
     ArrayList<Song> songList = new ArrayList<Song>();
-    //TODO API별 오디오포커스 구현, 광고 넣기, 아이콘설정, 메모리최적화, 누룬화면 만들기
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
         songListView = (RecyclerView) findViewById(R.id.songlist);
 
         runtimePermission();
+
+
 
         tv_license.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        LinearLayout linearLayout = (LinearLayout)findViewById(R.id.linearll);
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.linearll);
         linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -186,28 +196,38 @@ public class MainActivity extends AppCompatActivity {
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         Cursor cursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, null, sortOrder);
-        Log.d("노래갯수", Integer.toString(cursor.getCount()));
-        cursor.moveToFirst();
-        Log.d("노래갯수", Integer.toString(cursor.getCount()));
+        Log.e("test cursor", Boolean.toString(cursor == null));
+        try {
+            Log.d("노래갯수", Integer.toString(cursor.getCount()));
+            if (cursor.getCount() == 0) {
+                setEmptyView();
+            } else {
+                cursor.moveToFirst();
+                //각 노래의 정보를 Song객체에 담아 리스트에 저장한다.
+                //while이 먼저 안오고 do가 먼저오는 이유는 cursor의 갯수가 1개일때 cursor.moveToNext가 false가 되기때문
+                if (cursor != null && cursor.getCount() > 0) {
+                    do {
+                        long song_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
+                        long album_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
+                        String song_title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+                        String song_album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
+                        String song_artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+                        Long mDuration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+                        String dataPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+                        songList.add(new Song(song_id, album_id, song_title, song_album, song_artist, mDuration, dataPath));
 
-
-        //각 노래의 정보를 Song객체에 담아 리스트에 저장한다.
-        //while이 먼저 안오고 do가 먼저오는 이유는 cursor의 갯수가 1개일때 cursor.moveToNext가 false가 되기때문
-        if (cursor != null && cursor.getCount() > 0) {
-            do {
-                long song_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
-                long album_id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-                String song_title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
-                String song_album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
-                String song_artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                Long mDuration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
-                String dataPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
-//                Log.e("123",song_title);
-//                Log.e("song", song_id + " * " + album_id + " * " + song_title + " * " + song_album + " * " + song_artist + " * " + mDuration + " * " + dataPath);
-                songList.add(new Song(song_id, album_id, song_title, song_album, song_artist, mDuration, dataPath));
-
-            } while (cursor.moveToNext());
+                    } while (cursor.moveToNext());
+                }
+            }
+        } catch (Exception e) {
+            setEmptyView();
         }
 
+    }
+
+    private void setEmptyView() {
+        TextView tv_empty = (TextView) findViewById(R.id.tv_nosong);
+        tv_empty.setVisibility(View.VISIBLE);
+        songListView.setVisibility(View.GONE);
     }
 }

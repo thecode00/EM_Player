@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -135,6 +136,8 @@ public class PlayerActivity extends AppCompatActivity {
                 } else {
                     btn_repeat.setBackgroundResource(R.drawable.ic_norepeat);
                 }
+            } else if (act == AudioManager.ACTION_AUDIO_BECOMING_NOISY){
+                btn_playpause.setBackgroundResource(R.drawable.ic_play);
             }
         }
     };
@@ -153,6 +156,7 @@ public class PlayerActivity extends AppCompatActivity {
         intentFilter.addAction("songend");
         //노래가 준비되었을때
         intentFilter.addAction("prepared");
+        intentFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
@@ -296,6 +300,13 @@ public class PlayerActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
+        Log.e("onstop","stop");
+        try {
+            unbindService(serviceConnection);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        unregisterBroadcast();
         editShare();
         super.onStop();
     }

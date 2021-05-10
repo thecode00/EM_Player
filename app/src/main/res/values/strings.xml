@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">EM Player</string>
     <string name="license_des">Licenses</string>
+    <string name="nosong">No songs.</string>
 </resources>

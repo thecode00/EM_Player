@@ -1,11 +1,15 @@
 package com.thecode.emplayer;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaSession2;
+import android.media.session.MediaSession;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
@@ -15,7 +19,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class MusicService extends Service{
+public class MusicService extends Service {
     IBinder iBinder = new MyBinder();
     MediaPlayer mediaPlayer;
     ArrayList<Song> songList;
@@ -47,12 +51,13 @@ public class MusicService extends Service{
     public void onCreate() {
         //서비스가 실행될때 단 한번만 호출됨
         Log.e("oncreate", "start");
+        registerBroadcast();
         //오디오포커스
         am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
             @Override
             public void onAudioFocusChange(int focusChange) {
-                switch (focusChange){
+                switch (focusChange) {
 //                    case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK):
 //                        // Lower the volume while ducking.
 //                        mediaPlayer.setVolume(0.2f, 0.2f);
@@ -85,7 +90,7 @@ public class MusicService extends Service{
             public void onPrepared(MediaPlayer mp) {
                 isPrepared = true;
                 mediaPlayer.start();
-                Log.e("onprepare","ppp");
+                Log.e("onprepare", "ppp");
                 sendBroadcast(new Intent("prepared"));
             }
         });
@@ -95,10 +100,10 @@ public class MusicService extends Service{
             public void onCompletion(MediaPlayer mp) {
                 mediaPlayer.reset();
                 isPrepared = false;
-                Log.e("oncomple","comple");
+                Log.e("oncomple", "comple");
                 SharedPreferences sharedPreferences = getSharedPreferences("loop", MODE_PRIVATE);
                 isLoop = sharedPreferences.getBoolean("isLoop", false);
-                if (isLoop){
+                if (isLoop) {
                     position = ((position + 1) % songList.size());
                 }
                 prepare();
@@ -133,26 +138,27 @@ public class MusicService extends Service{
         prepare();
         return super.onStartCommand(intent, flags, startId);
     }
-    public boolean isPlaying(){
-        if (mediaPlayer != null){
+
+    public boolean isPlaying() {
+        if (mediaPlayer != null) {
             return mediaPlayer.isPlaying();
         }
         return false;
     }
 
-    private void prepare(){
+    private void prepare() {
         try {
             mediaPlayer.setDataSource(songList.get(position).getmDataPath());
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.prepare();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void play(int position, int curSeek){
+    public void play(int position, int curSeek) {
         mSong = songList.get(position);
-        if (mediaPlayer != null){
+        if (mediaPlayer != null) {
             try {
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
@@ -161,15 +167,15 @@ public class MusicService extends Service{
                     mediaPlayer.seekTo(curSeek);
                     mediaPlayer.start();
                 }
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
     }
 
-    public int getPosition(){
-        if (isPrepared){
+    public int getPosition() {
+        if (isPrepared) {
             return mediaPlayer.getCurrentPosition();
         }
         return 0;
@@ -184,6 +190,29 @@ public class MusicService extends Service{
     @Override
     public void onDestroy() {
         am.abandonAudioFocus(audioFocusChangeListener);
+        unregisterBroadcast();
         super.onDestroy();
+    }
+
+    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String act = intent.getAction();
+            if (act == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+                Log.e("이어폰분리","1");
+                mediaPlayer.pause();
+            }
+        }
+    };
+
+    private void registerBroadcast() {
+        IntentFilter intentFilter = new IntentFilter();
+        //이어폰이 분리됬을때
+        intentFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        registerReceiver(mBroadcastReceiver, intentFilter);
+    }
+
+    private void unregisterBroadcast() {
+        unregisterReceiver(mBroadcastReceiver);
     }
 }

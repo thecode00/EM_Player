@@ -14,7 +14,7 @@ public class LicenseActivity extends AppCompatActivity {
 
         tv_license = (TextView) findViewById(R.id.tv_license);
         tv_license.append("Icon\n");
-        tv_license.append("https://icon-icons.com/icon/play/40843\n");
+        tv_license.append("https://icon-icons.com/icon/multimeda-play/149250\n");
         tv_license.append("https://icon-icons.com/icon/audio-music-note-player-radio-song-sound/122513\n");
     }
 }
